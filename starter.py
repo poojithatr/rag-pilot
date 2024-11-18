@@ -1,50 +1,43 @@
-from typing import List
-import numpy as np
-import torch
-from transformers import AutoTokenizer, AutoModel
-from transformers import pipeline
-from sklearn.metrics.pairwise import cosine_similarity
+import argparse
+from langchain.vectorstores.chroma import Chroma
+from langchain.prompts import ChatPromptTemplate
+from langchain_community.llms.ollama import Ollama
+from langchain_community.embeddings.ollama import OllamaEmbeddings
+from langchain_community.embeddings.bedrock import BedrockEmbeddings
 
-# Example documents
-DOCUMENTS = [
-    "Document 1: Explanation of topic X, covering basic principles and foundational concepts.",
-    "Document 2: Detailed insights on topic Y, focusing on key methodologies and applications.",
-    "Document 3: Overview of Z applications, showcasing real-world usage scenarios and case studies.",
-    "Document 4: Advanced techniques in X, delving into complex approaches and best practices.",
-    "Document 5: Practical uses of Y, illustrating tangible benefits and examples of implementation."
-]
-
-# Step 1: Generate embeddings using DistilBERT
-def get_document_embeddings(documents: List[str], model_name: str = "distilbert-base-uncased") -> np.ndarray:
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModel.from_pretrained(model_name)
-    
-    # Tokenizing the documents with explicit truncation
-    inputs = tokenizer(documents, padding=True, truncation=True, return_tensors="pt")
-    
-    # Getting the embeddings from the model
-    with torch.no_grad():
-        outputs = model(**inputs)
-    
-    # Taking the mean of the last hidden states as embeddings
-    embeddings = outputs.last_hidden_state.mean(dim=1)
-    return embeddings.numpy()
-
-# Step 2: Retrieve relevant documents using cosine similarity
-def retrieve_data(query: str, doc_embeddings: np.ndarray, documents: List[str], model_name: str = "distilbert-base-uncased", top_k: int = 2) -> List[str]:
-    pass
-
-# Step 3: Generate a focused response using an open-source language model
-def generate_response(retrieved_data: List[str], query: str) -> str:
-    pass
+CHROMA_PATH = "chroma"
 
 def main():
-    # Step 1: Embed the documents
-    doc_embeddings = get_document_embeddings(DOCUMENTS)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("query_text", type=str, help="The query text.")
+    args = parser.parse_args()
+    query_text = args.query_text
+    query_rag(query_text)
 
-    # Example query
-    query = "Explain the basics of topic X."
-    print(doc_embeddings)
-    
+def query_rag(query_text: str):
+    # Prepare the DB.
+    embedding_function = get_embedding_function()
+    db = Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
+
+    # Search the DB.
+    results = db.similarity_search_with_score(query_text, k=5)
+
+    context_text = "\n\n---\n\n".join([doc.page_content for doc, _score in results])
+    prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
+    prompt = prompt_template.format(context=context_text, question=query_text)
+    # print(prompt)
+
+    model = Ollama(model="mistral")
+    response_text = model.invoke(prompt)
+
+    sources = [doc.metadata.get("id", None) for doc, _score in results]
+    formatted_response = f"Response: {response_text}\nSources: {sources}"
+    print(formatted_response)
+    return response_text
+
+def get_embedding_function():
+    embeddings = OllamaEmbeddings(model="nomic-embed-text")
+    return embeddings
+
 if __name__ == "__main__":
     main()
