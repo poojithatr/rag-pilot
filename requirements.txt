@@ -3,3 +3,10 @@ langchain
 chromadb # Vector storage
 pytest
 boto3
+langchain-community
+python-docx
+pandas
+umap
+plotly
+sklearn
+numpy

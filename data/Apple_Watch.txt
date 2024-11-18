@@ -36,22 +36,27 @@ Productivity
 1.Calendar, reminders, and app notifications.
 2.Apple Pay for secure, contactless payments.
 3.Seamless integration with Apple's ecosystem.
+
 Safety
 1.Fall detection and Emergency SOS.
 2.Crash Detection in newer models.
 3.International emergency calling.
+
 Battery Life
 1.Typically lasts 18 hours; newer models improve efficiency.
 2.Fast charging introduced in recent generations.
+
 Series & Models
 1.Series 1 to 9, Apple Watch Ultra, and SE models.
 2.Differ in features, materials, and price points.
+
 Customization
 1.Multiple watch faces, complications for personalization.
 2.App Store for third-party apps.
+
 Impact
 1.Widely regarded as the best-selling smartwatch.
-2.Significant influence on health monitoring and wearables.
+2.Significant influence on health monitoring and wearables.\
 Criticisms
 1.Battery life could be better for power users.
 2.High cost compared to competitors.
