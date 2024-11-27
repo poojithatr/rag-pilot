@@ -37,11 +37,11 @@ def query_rag(query_text: str):
     prompt = prompt_template.format(context=context_text, question=query_text)
     # print(prompt)
 
-    model = Ollama(model="mistral")
+    model = Ollama(model="llama3")
     response_text = model.invoke(prompt)
 
-    sources = [doc.metadata.get("id", None) for doc, _score in results]
-    formatted_response = f"Response: {response_text}\nSources: {sources}"
+    sources = [doc.metadata.get("id") for doc, _score in results]
+    formatted_response = f"Response: {response_text}\n Sources: {sources}"
     print(formatted_response)
     return response_text
 

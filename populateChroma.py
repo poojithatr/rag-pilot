@@ -2,7 +2,6 @@ import argparse
 import os
 import shutil
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain.schema.document import Document
 from starter import get_embedding_function
 from langchain_community.vectorstores import Chroma
 from langchain_ollama import OllamaEmbeddings
@@ -12,9 +11,14 @@ import umap
 import plotly.express as px
 from sklearn.preprocessing import StandardScaler
 import numpy as np
+import os
+import json
+import yaml  # PyYAML library
+from docx import Document as DocxDocument
+from langchain.schema import Document
 
 CHROMA_PATH = "chroma"
-DATA_PATH = "data"
+DATA_PATH = "data/Logs"
 
 def main():
     # Check if the database should be cleared (using the --reset flag).
@@ -72,7 +76,55 @@ def load_documents():
                 # Add each paragraph to the documents list
                 documents.append(Document(page_content=para.text, metadata={"source": filename}))
 
+
+        elif filename.endswith(".json"):
+
+            # Read JSON file and process it
+
+            with open(doc_path, "r") as file:
+
+                data = json.load(file)
+
+            # Flatten JSON data into strings and add them
+
+            for key, value in flatten_json(data).items():
+                combined_text = f"{key}: {value}"  # Include key in the text
+
+                documents.append(Document(page_content=combined_text, metadata={"source": filename, "key": key}))
+
+
+        elif filename.endswith((".yaml", ".yml")):
+
+            # Read YAML file and process it
+
+            with open(doc_path, "r") as file:
+
+                data = yaml.safe_load(file)
+
+            # Flatten YAML data into strings and add them
+
+            for key, value in flatten_json(data).items():
+                combined_text = f"{key}: {value}"  # Include key in the text
+
+                documents.append(Document(page_content=combined_text, metadata={"source": filename, "key": key}))
     return documents
+
+def flatten_json(y, prefix=''):
+    """
+    Helper function to flatten nested JSON or YAML structures into key-value pairs.
+    """
+    out = {}
+    for k, v in y.items():
+        new_key = f"{prefix}.{k}" if prefix else k
+        if isinstance(v, dict):
+            out.update(flatten_json(v, new_key))
+        elif isinstance(v, list):
+            for i, item in enumerate(v):
+                out.update(flatten_json({f"{new_key}[{i}]": item}))
+        else:
+            out[new_key] = v
+
+    return out
 
 def split_documents(documents: list[Document]):
     text_splitter = RecursiveCharacterTextSplitter(
